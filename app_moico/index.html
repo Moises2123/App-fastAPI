@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteador de Preguntas para Entrevistas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.21.3/babel.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 5px;
+        }
+        .group h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        .question {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .question-number {
+            font-weight: bold;
+            margin-right: 8px;
+            color: #4CAF50;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 16px;
+            margin: 20px 0;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .settings {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .settings label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .settings input {
+            width: 60px;
+            padding: 5px;
+            margin-left: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .print-button {
+            background-color: #2196F3;
+        }
+        .print-button:hover {
+            background-color: #0b7dda;
+        }
+        .reset-button {
+            background-color: #f44336;
+        }
+        .reset-button:hover {
+            background-color: #d32f2f;
+        }
+        @media print {
+            button {
+                display: none;
+            }
+            body {
+                background-color: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [selectedQuestions, setSelectedQuestions] = useState([]);
+            const [isLoaded, setIsLoaded] = useState(false);
+            const [totalGroups, setTotalGroups] = useState(4);
+            const [totalToSelect, setTotalToSelect] = useState(26);
+            
+            // Preguntas específicas para entrevistas
+            const interviewQuestions = [
+                "¿Por qué te gustaría trabajar en esta empresa?",
+                "¿Cuál es tu mayor fortaleza y cómo la has utilizado en tu trabajo?",
+                "¿Cuáles son tus debilidades y qué estás haciendo para mejorarlas?",
+                "¿Cómo manejas el estrés o la presión en el trabajo?",
+                "Cuéntame sobre una vez en la que superaste un desafío en tu trabajo.",
+                "¿Cómo te mantienes motivado/a cuando realizas tareas repetitivas?",
+                "¿Qué logros profesionales te enorgullecen más?",
+                "¿Cuál es tu estilo de trabajo: colaborativo o más independiente?",
+                "¿Cómo priorizas tus tareas cuando tienes múltiples responsabilidades?",
+                "¿Cómo gestionas los conflictos con compañeros de trabajo?",
+                "¿Tienes experiencia trabajando en equipo? ¿Cómo contribuyes a un equipo?",
+                "¿Cuál es tu mayor desafío profesional y cómo lo has enfrentado?",
+                "¿Qué tipo de ambiente laboral prefieres?",
+                "¿Cómo manejas las críticas constructivas?",
+                "¿Te consideras una persona organizada? ¿Cómo gestionas tu tiempo?",
+                "¿Qué te motiva más: el dinero, el reconocimiento, o el desarrollo profesional?",
+                "¿Estás dispuesto/a a asumir nuevas responsabilidades si se te solicita?",
+                "¿Qué te gustaría lograr en los próximos cinco años en tu carrera?",
+                "¿Cómo te preparas para una reunión importante o presentación?",
+                "¿Tienes experiencia liderando proyectos o equipos?",
+                "¿Cómo reaccionas ante situaciones que no puedes controlar?",
+                "¿Cómo gestionas el equilibrio entre trabajo y vida personal?",
+                "¿Cuál es tu experiencia con las tecnologías y herramientas relacionadas con este trabajo?",
+                "¿Por qué dejaste tu empleo anterior?",
+                "¿Qué te hizo interesado/a en este puesto específicamente?",
+                "¿Cómo te aseguras de que un proyecto se complete a tiempo?",
+                "¿Estás dispuesto/a a viajar o reubicarse si el trabajo lo requiere?",
+                "¿Qué esperas aprender de este puesto?",
+                "¿Cuál fue la última vez que aprendiste algo nuevo en tu campo?",
+                "¿Cómo manejarías un desacuerdo con un supervisor?",
+                "¿Cuál consideras que es la mayor contribución que puedes hacer en esta empresa?",
+                "¿Has trabajado alguna vez en un entorno multicultural? ¿Cómo fue tu experiencia?",
+                "¿Qué opinas sobre la retroalimentación constante y el aprendizaje continuo?",
+                "¿Cómo te adaptas a cambios en el trabajo o nuevas políticas?",
+                "¿Qué estrategias usas para mantenerte al día con las tendencias de tu industria?",
+                "¿Cómo describirías tu ética de trabajo?",
+                "¿Qué tipo de proyectos disfrutas más?",
+                "¿Has tenido alguna vez un mentor/a en tu carrera? ¿Cómo te ayudó?",
+                "¿Cómo manejas la frustración cuando las cosas no salen como esperabas?",
+                "¿Qué haces cuando necesitas tomar una decisión difícil en el trabajo?",
+                "¿Cómo equilibras ser productivo/a y creativo/a en tu trabajo?",
+                "¿Tienes alguna experiencia trabajando bajo objetivos y metas?",
+                "¿Cómo te asegurarías de que tu trabajo esté alineado con los objetivos de la empresa?",
+                "¿Tienes alguna habilidad o certificación que consideras que te da una ventaja sobre otros candidatos?",
+                "¿Cómo te gustaría que se te reconozca por tu trabajo?",
+                "¿Te consideras una persona de acción o reflexiva antes de tomar decisiones?",
+                "¿Cómo te adaptas a nuevas herramientas o procesos en el trabajo?",
+                "¿Qué esperas de un buen jefe o supervisor?",
+                "¿Por qué crees que eres el candidato ideal para este puesto?",
+                "¿Tienes alguna pregunta sobre el puesto o la empresa?"
+            ];
+
+            // Función para sortear las preguntas
+            const sortQuestions = () => {
+                // Copiar y mezclar las preguntas
+                const shuffled = [...interviewQuestions].sort(() => 0.5 - Math.random());
+                
+                // Seleccionar la cantidad deseada
+                const selected = shuffled.slice(0, totalToSelect);
+                
+                // Organizar en grupos
+                const grouped = [];
+                const questionsPerGroup = Math.floor(selected.length / totalGroups);
+                const extraQuestions = selected.length % totalGroups;
+                
+                let currentIndex = 0;
+                for (let i = 0; i < totalGroups; i++) {
+                    // Determinar cuántas preguntas van en este grupo
+                    const groupSize = questionsPerGroup + (i < extraQuestions ? 1 : 0);
+                    
+                    // Obtener las preguntas para este grupo
+                    const groupQuestions = selected.slice(currentIndex, currentIndex + groupSize);
+                    currentIndex += groupSize;
+                    
+                    grouped.push({
+                        name: `Grupo ${i + 1}`,
+                        questions: groupQuestions
+                    });
+                }
+                
+                setSelectedQuestions(grouped);
+                setIsLoaded(true);
+            };
+
+            // Inicializar al cargar
+            useEffect(() => {
+                sortQuestions();
+            }, []);
+
+            // Función para imprimir
+            const handlePrint = () => {
+                window.print();
+            };
+
+            // Contenido principal
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>Sorteador de Preguntas para Entrevistas</h1>
+                    </div>
+                    
+                    {!isLoaded ? (
+                        <p>Cargando preguntas...</p>
+                    ) : (
+                        <>
+                            <div className="settings">
+                                <h3>Configuración</h3>
+                                <label>
+                                    Número de grupos:
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        max="10"
+                                        value={totalGroups}
+                                        onChange={(e) => setTotalGroups(Math.max(1, parseInt(e.target.value) || 4))}
+                                    />
+                                </label>
+                                
+                                <label>
+                                    Preguntas a seleccionar:
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        max={interviewQuestions.length}
+                                        value={totalToSelect}
+                                        onChange={(e) => setTotalToSelect(Math.min(interviewQuestions.length, Math.max(1, parseInt(e.target.value) || 26)))}
+                                    />
+                                </label>
+                            </div>
+
+                            <div className="groups-container">
+                                <h2>Preguntas Seleccionadas</h2>
+                                {selectedQuestions.map((group, groupIndex) => (
+                                    <div className="group" key={groupIndex}>
+                                        <h3>{group.name}</h3>
+                                        {group.questions.map((question, questionIndex) => (
+                                            <div className="question" key={questionIndex}>
+                                                <span className="question-number">{questionIndex + 1}.</span>
+                                                {question}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <div className="actions">
+                                <button onClick={sortQuestions}>Sortear de Nuevo</button>
+                                <button className="print-button" onClick={handlePrint}>Imprimir / Guardar PDF</button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

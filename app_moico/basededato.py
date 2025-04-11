@@ -14,6 +14,6 @@ async_session = sessionmaker(
 )
 
 # Dependencia para obtener una sesión de base de datos
-async def get_session() -> AsyncSession:
+async def get_session() -> AsyncSession: # type: ignore
     async with async_session() as session:
         yield session
