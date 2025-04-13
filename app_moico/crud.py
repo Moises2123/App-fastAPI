@@ -6,7 +6,7 @@ from app_moico.esquema import UserCreate
 
 async def create_user(db: AsyncSession, user: UserCreate):
     new_user = User(name=user.name, email=user.email)
-    db.add(new_user)
+    db.add(new_user)    
     await db.commit()
     await db.refresh(new_user)
     return new_user
